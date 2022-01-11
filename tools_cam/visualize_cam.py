@@ -93,7 +93,7 @@ def main():
         color1 = (0, 0, 255)
 
         # rotated box
-        rect = cv2.minAreaRect(cnts[0])
+        rect = cv2.minAreaRect(c)
         box = np.int0(cv2.boxPoints(rect))
         rot_box_im = cv2.drawContours(np.array(im), [box], 0, (36, 255, 12), 3)
 
