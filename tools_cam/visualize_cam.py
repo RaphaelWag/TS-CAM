@@ -33,6 +33,7 @@ from torch.utils.tensorboard import SummaryWriter
 from timm.models import create_model as create_deit_model
 from timm.optim import create_optimizer
 
+
 def main():
     config_file = '../configs/ILSVRC/deit_tscam_small_patch16_224.yaml'
     cfg_from_file(config_file)
@@ -51,7 +52,7 @@ def main():
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
-    filename = "/tscam_images/val/object/object_0.JPEG"
+    filename = "/tscam_images/val/object/object_88.JPEG"
     im = Image.open(filename).convert('RGB')
     x = transform(im)
     x = x.unsqueeze(0).to(device)
@@ -67,7 +68,7 @@ def main():
     mask_pred = (mask_pred - mask_min_v) / (mask_max_v - mask_min_v)
     # mask_image = (mask_pred[..., np.newaxis] * im).astype("uint8")
     plt.axis('off')
-    plt.imsave('/output/object_0_mask_pred.JPEG', mask_pred)
+    plt.imsave('/output/object_88_mask_pred.JPEG', mask_pred)
     plt.cla()
     plt.clf()
     plt.close()
@@ -81,8 +82,7 @@ def main():
     _, mask_pred_binary_map = cv2.threshold(mask_pred,
                                             mask_pred.max() * 0.12, 1,
                                             cv2.THRESH_TOZERO)
-    contours, _ = cv2.findContours((mask_pred_binary_map * 255).astype(np.uint8),
-                                   cv2.RETR_TREE,
+    contours, _ = cv2.findContours((mask_pred_binary_map * 255).astype(np.uint8), cv2.RETR_TREE,
                                    cv2.CHAIN_APPROX_SIMPLE)
     w, h = im.size
     if len(contours) != 0:
@@ -97,7 +97,8 @@ def main():
     _ = ax1.imshow(im_box)  # Visualize Input Image with Estimated Box
     _ = ax2.imshow(mask_pred)  # Visualize TS-CAM which is localization map for estimating object box
     _ = ax3.imshow(mask_pred_binary_map)  # Visualize Binary Map
-    plt.savefig('/output/object_0_box_pred.JPEG')
+    plt.savefig('/output/object_88_box_pred.JPEG')
+
 
 if __name__ == "__main__":
     main()
