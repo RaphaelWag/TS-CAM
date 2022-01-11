@@ -18,6 +18,7 @@ from torchvision import transforms
 import torch.nn.functional as F
 
 from PIL import Image
+from glob import glob
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
@@ -52,59 +53,60 @@ def main():
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
-    filename = "/tscam_images/val/object/object_88.JPEG"
-    im = Image.open(filename).convert('RGB')
-    x = transform(im)
-    x = x.unsqueeze(0).to(device)
-    with torch.no_grad():
-        x_logits, tscams = model(x, True)
+    input_dir = '/tscam_images/val/object/'
+    files = glob(os.path.join(input_dir, '*.JPEG'))
+    for count, filename in enumerate(files):
+        im = Image.open(filename).convert('RGB')
+        x = transform(im)
+        x = x.unsqueeze(0).to(device)
+        with torch.no_grad():
+            x_logits, tscams = model(x, True)
 
-    x_probs = F.softmax(x_logits, dim=-1)
-    pred_cls_id = x_probs.argmax()  # hardcode this to screw?
+        x_probs = F.softmax(x_logits, dim=-1)
+        pred_cls_id = x_probs.argmax()  # hardcode this to screw?
 
-    cam_pred = tscams[0, pred_cls_id, :, :].detach().cpu().numpy()
-    mask_pred = cv2.resize(cam_pred, im.size)
-    mask_min_v, mask_max_v = mask_pred.min(), mask_pred.max()
-    mask_pred = (mask_pred - mask_min_v) / (mask_max_v - mask_min_v)
-    # mask_image = (mask_pred[..., np.newaxis] * im).astype("uint8")
-    plt.axis('off')
-    plt.imsave('/output/object_88_mask_pred.JPEG', mask_pred)
-    plt.cla()
-    plt.clf()
-    plt.close()
+        cam_pred = tscams[0, pred_cls_id, :, :].detach().cpu().numpy()
+        mask_pred = cv2.resize(cam_pred, im.size)
+        mask_min_v, mask_max_v = mask_pred.min(), mask_pred.max()
+        mask_pred = (mask_pred - mask_min_v) / (mask_max_v - mask_min_v)
+        # mask_image = (mask_pred[..., np.newaxis] * im).astype("uint8")
+        plt.axis('off')
+        # plt.imsave('/output/object_' + str(count) + '_mask_pred.JPEG', mask_pred)
+        plt.cla()
+        plt.clf()
+        plt.close()
 
-    fig, (ax1, ax2, ax3, ax4) = plt.subplots(ncols=4, figsize=(16, 16))
+        fig, (ax1, ax2, ax3, ax4) = plt.subplots(ncols=4, figsize=(16, 16))
 
-    ax1.set_title('Input Image')
-    ax2.set_title('Token-Semantic Coupled Attention Map')
-    ax3.set_title('Binary Map')
+        ax1.set_title('Input Image')
+        ax2.set_title('Token-Semantic Coupled Attention Map')
+        ax3.set_title('Binary Map')
 
-    _, mask_pred_binary_map = cv2.threshold(mask_pred,
-                                            mask_pred.max() * 0.12, 1,
-                                            cv2.THRESH_TOZERO)
-    _, contours, _ = cv2.findContours((mask_pred_binary_map * 255).astype(np.uint8), cv2.RETR_TREE,
-                                   cv2.CHAIN_APPROX_SIMPLE)
-    w, h = im.size
-    if len(contours) != 0:
-        # normal box
-        c = max(contours, key=cv2.contourArea)
-        x, y, w, h = cv2.boundingRect(c)
-        estimated_bbox = [x, y, x + w, y + h]
-        color1 = (0, 0, 255)
+        _, mask_pred_binary_map = cv2.threshold(mask_pred,
+                                                mask_pred.max() * 0.12, 1,
+                                                cv2.THRESH_TOZERO)
+        _, contours, _ = cv2.findContours((mask_pred_binary_map * 255).astype(np.uint8), cv2.RETR_TREE,
+                                          cv2.CHAIN_APPROX_SIMPLE)
+        w, h = im.size
+        if len(contours) != 0:
+            # normal box
+            c = max(contours, key=cv2.contourArea)
+            x, y, w, h = cv2.boundingRect(c)
+            estimated_bbox = [x, y, x + w, y + h]
+            color1 = (0, 0, 255)
 
-        # rotated box
-        rect = cv2.minAreaRect(c)
-        box = np.int0(cv2.boxPoints(rect))
-        rot_box_im = cv2.drawContours(np.array(im), [box], 0, (36, 255, 12), 3)
+            # rotated box
+            rect = cv2.minAreaRect(c)
+            box = np.int0(cv2.boxPoints(rect))
+            rot_box_im = cv2.drawContours(np.array(im), [box], 0, (36, 255, 12), 3)
 
-
-    x1, y1, x2, y2 = estimated_bbox
-    im_box = cv2.rectangle(np.array(im), (x1, y1), (x2, y2), color1, 2)
-    _ = ax1.imshow(im_box)  # Visualize Input Image with Estimated Box
-    _ = ax2.imshow(mask_pred)  # Visualize TS-CAM which is localization map for estimating object box
-    _ = ax3.imshow(mask_pred_binary_map)  # Visualize Binary Map
-    _ = ax4.imshow(rot_box_im)  # Visualize rotated box
-    plt.savefig('/output/object_88_box_pred.JPEG')
+        x1, y1, x2, y2 = estimated_bbox
+        im_box = cv2.rectangle(np.array(im), (x1, y1), (x2, y2), color1, 2)
+        _ = ax1.imshow(im_box)  # Visualize Input Image with Estimated Box
+        _ = ax2.imshow(mask_pred)  # Visualize TS-CAM which is localization map for estimating object box
+        _ = ax3.imshow(mask_pred_binary_map)  # Visualize Binary Map
+        _ = ax4.imshow(rot_box_im)  # Visualize rotated box
+        plt.savefig('/output/object_' + str(count) + '_box_pred.JPEG')
 
 
 if __name__ == "__main__":
