@@ -73,7 +73,7 @@ def main():
     plt.clf()
     plt.close()
 
-    fig, (ax1, ax2, ax3) = plt.subplots(ncols=3, figsize=(16, 16))
+    fig, (ax1, ax2, ax3, ax4) = plt.subplots(ncols=4, figsize=(16, 16))
 
     ax1.set_title('Input Image')
     ax2.set_title('Token-Semantic Coupled Attention Map')
@@ -86,15 +86,24 @@ def main():
                                    cv2.CHAIN_APPROX_SIMPLE)
     w, h = im.size
     if len(contours) != 0:
+        # normal box
         c = max(contours, key=cv2.contourArea)
         x, y, w, h = cv2.boundingRect(c)
         estimated_bbox = [x, y, x + w, y + h]
         color1 = (0, 0, 255)
+
+        # rotated box
+        rect = cv2.minAreaRect(cnts[0])
+        box = np.int0(cv2.boxPoints(rect))
+        rot_box_im = cv2.drawContours(np.array(im), [box], 0, (36, 255, 12), 3)
+
+
     x1, y1, x2, y2 = estimated_bbox
     im_box = cv2.rectangle(np.array(im), (x1, y1), (x2, y2), color1, 2)
     _ = ax1.imshow(im_box)  # Visualize Input Image with Estimated Box
     _ = ax2.imshow(mask_pred)  # Visualize TS-CAM which is localization map for estimating object box
     _ = ax3.imshow(mask_pred_binary_map)  # Visualize Binary Map
+    _ = ax4.imshow(rot_box_im)  # Visualize rotated box
     plt.savefig('/output/object_88_box_pred.JPEG')
 
 
