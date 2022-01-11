@@ -90,8 +90,6 @@ def main():
         x, y, w, h = cv2.boundingRect(c)
         estimated_bbox = [x, y, x + w, y + h]
         color1 = (0, 0, 255)
-    heatmap = cv2.applyColorMap((mask_pred * 255).astype(np.uint8), cv2.COLORMAP_TURBO)
-    blend = np.array(im) * 0.5 + heatmap * 0.5
     x1, y1, x2, y2 = estimated_bbox
     im_box = cv2.rectangle(np.array(im), (x1, y1), (x2, y2), color1, 2)
     _ = ax1.imshow(im_box)  # Visualize Input Image with Estimated Box
