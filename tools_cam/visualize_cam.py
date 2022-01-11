@@ -72,7 +72,8 @@ def main():
 
     model = create_deit_model(cfg.MODEL.ARCH, pretrained=False, num_classes=cfg.DATA.NUM_CLASSES, drop_rate=0.0,
                               drop_path_rate=0.1, drop_block_rate=None)
-    model = model.cuda()
+    device = 'cuda'
+    model = model.to(device)
     checkpoint = torch.load('../ts-cam-deit-small/ts-cam-deit-small/ILSVRC2012/model_epoch12.pth')
     pretrained_dict = {k[7:]: v for k, v in checkpoint['state_dict'].items()}
     model.load_state_dict(pretrained_dict)
@@ -85,9 +86,9 @@ def main():
     filename = "../tscam_images/val/object/object_0.JPEG"
     im = Image.open(filename).convert('RGB')
     x = transform(im)
-
+    x = x.unsqueeze(0).to(device)
     with torch.no_grad():
-        x_logits, tscams = model(x.unsqueeze(0).cuda(), True)
+        x_logits, tscams = model(x, True)
 
     x_probs = F.softmax(x_logits, dim=-1)
     pred_cls_id = x_probs.argmax()  # hardcode this to screw?
