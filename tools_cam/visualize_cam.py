@@ -42,7 +42,7 @@ def main():
                               drop_path_rate=0.1, drop_block_rate=None)
     device = 'cuda'
     model = model.to(device)
-    checkpoint = torch.load('../ts-cam-deit-small/ts-cam-deit-small/ILSVRC2012/model_epoch12.pth')
+    checkpoint = torch.load('/ts-cam-deit-small/ts-cam-deit-small/ILSVRC2012/model_epoch12.pth')
     pretrained_dict = {k[7:]: v for k, v in checkpoint['state_dict'].items()}
     model.load_state_dict(pretrained_dict)
     model.eval()
@@ -51,7 +51,7 @@ def main():
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
-    filename = "../tscam_images/val/object/object_0.JPEG"
+    filename = "/tscam_images/val/object/object_0.JPEG"
     im = Image.open(filename).convert('RGB')
     x = transform(im)
     x = x.unsqueeze(0).to(device)
@@ -67,7 +67,7 @@ def main():
     mask_pred = (mask_pred - mask_min_v) / (mask_max_v - mask_min_v)
     # mask_image = (mask_pred[..., np.newaxis] * im).astype("uint8")
     plt.axis('off')
-    plt.imsave('../output/object_0_mask_pred.JPEG', mask_pred)
+    plt.imsave('/output/object_0_mask_pred.JPEG', mask_pred)
     plt.cla()
     plt.clf()
     plt.close()
@@ -97,7 +97,7 @@ def main():
     _ = ax1.imshow(im_box)  # Visualize Input Image with Estimated Box
     _ = ax2.imshow(mask_pred)  # Visualize TS-CAM which is localization map for estimating object box
     _ = ax3.imshow(mask_pred_binary_map)  # Visualize Binary Map
-    plt.savefig('../output/object_0_box_pred.JPEG')
+    plt.savefig('/output/object_0_box_pred.JPEG')
 
 if __name__ == "__main__":
     main()
