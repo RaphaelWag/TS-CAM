@@ -70,7 +70,7 @@ def main():
     cfg_from_file(config_file)
     cfg.BASIC.ROOT_DIR = '../'
 
-    model = create_deit_model(cfg.MODEL.ARCH, pretrained=True, num_classes=cfg.DATA.NUM_CLASSES, drop_rate=0.0,
+    model = create_deit_model(cfg.MODEL.ARCH, pretrained=False, num_classes=cfg.DATA.NUM_CLASSES, drop_rate=0.0,
                               drop_path_rate=0.1, drop_block_rate=None)
     model = model.cuda()
     checkpoint = torch.load('../ts-cam-deit-small/ts-cam-deit-small/ILSVRC2012/model_epoch12.pth')
