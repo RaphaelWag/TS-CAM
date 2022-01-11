@@ -82,7 +82,7 @@ def main():
     _, mask_pred_binary_map = cv2.threshold(mask_pred,
                                             mask_pred.max() * 0.12, 1,
                                             cv2.THRESH_TOZERO)
-    contours, _ = cv2.findContours((mask_pred_binary_map * 255).astype(np.uint8), cv2.RETR_TREE,
+    _, contours, _ = cv2.findContours((mask_pred_binary_map * 255).astype(np.uint8), cv2.RETR_TREE,
                                    cv2.CHAIN_APPROX_SIMPLE)
     w, h = im.size
     if len(contours) != 0:
