@@ -34,37 +34,6 @@ from torch.utils.tensorboard import SummaryWriter
 from timm.models import create_model as create_deit_model
 from timm.optim import create_optimizer
 
-
-def creat_model(cfg, args):
-    print('==> Preparing networks for baseline...')
-    # use gpu
-    device = torch.device("cuda")
-    assert torch.cuda.is_available(), "CUDA is not available"
-    # model and optimizer
-    model = create_deit_model(
-        cfg.MODEL.ARCH,
-        pretrained=True,
-        num_classes=cfg.DATA.NUM_CLASSES,
-        drop_rate=args.drop,
-        drop_path_rate=args.drop_path,
-        drop_block_rate=None,
-    )
-    print(model)
-    if args.resume:
-        checkpoint = torch.load(args.resume)
-        pretrained_dict = {k[7:]: v for k, v in checkpoint['state_dict'].items()}
-        model.load_state_dict(pretrained_dict)
-        print('load pretrained ts-cam model.')
-
-    model = torch.nn.DataParallel(model, device_ids=list(range(torch.cuda.device_count())))
-    model = model.to(device)
-    # loss
-    cls_criterion = torch.nn.CrossEntropyLoss().to(device)
-
-    print('Preparing networks done!')
-    return device, model, cls_criterion
-
-
 def main():
     config_file = '../configs/ILSVRC/deit_tscam_small_patch16_224.yaml'
     cfg_from_file(config_file)
