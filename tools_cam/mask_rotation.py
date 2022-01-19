@@ -78,10 +78,10 @@ def mask_padding(mask, height, width):
     padding = np.zeros(shape=(height, width))
 
     # copy mask into center of emtpy image
-    padded_mask = padding[y_start:y_start + orig_height,
+    padding[y_start:y_start + orig_height,
                   x_start:x_start + orig_width] = mask
 
-    return padded_mask
+    return padding
 
 
 def rotateImage(image, angle):
@@ -133,9 +133,9 @@ def main():
     gt_mask = mask_padding(gt_mask, new_height, new_width)
     worst_case_mask = mask_padding(worst_case_mask, new_height, new_width)
 
-    print('gt_mask.shape', gt_mask.shape, 'worst_case_mask.shape', worst_case_mask.shape)
+    print('Padded', 'gt_mask.shape', gt_mask.shape, 'worst_case_mask.shape', worst_case_mask.shape)
 
-    rotation_angle = np.arctan2(x_1=width_1, x_2=height_1)/np.pi*180
+    rotation_angle = np.arctan2(x1=width_1, x2=height_1) / np.pi * 180
     print('rotation_angle', rotation_angle)
     rotate_mask = rotateImage(gt_mask, rotation_angle)
     rotate_mask_2 = rotateImage(gt_mask, -rotation_angle)
