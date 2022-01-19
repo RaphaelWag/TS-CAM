@@ -142,11 +142,11 @@ def main():
 
     print('rotate_mask.shape', rotate_mask.shape)
 
-    overlap = rotate_mask + worst_case_mask
-    overlap_2 = rotate_mask_2 + worst_case_mask
+    overlap = rotate_mask * worst_case_mask
+    overlap_2 = rotate_mask_2 * worst_case_mask
 
-    overlap_count = np.sum(np.where(overlap == 2).flatten())
-    overlap_count_2 = np.sum(np.where(overlap_2 == 2).flatten())
+    overlap_count = np.sum(overlap.flatten())
+    overlap_count_2 = np.sum(overlap_2.flatten())
 
     print(overlap_count, overlap_count_2)
 
