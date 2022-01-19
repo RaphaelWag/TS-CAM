@@ -163,7 +163,7 @@ def main():
         box = np.int0(cv2.boxPoints(rect))
         rot_box_im = cv2.drawContours(np.array(worst_case_mask), [box], 0, (36, 255, 12), 3)
 
-    fig, (ax1) = plt.subplots(ncols=4, figsize=(16, 16))
+    fig, (ax1) = plt.subplots(ncols=1, figsize=(16, 16))
     _ = ax1.imshow(rot_box_im)  # Visualize rotated box
     plt.savefig('/output/object_rotated_box_pred.JPEG')
     # TODO resize height of gt to diag of inference image
