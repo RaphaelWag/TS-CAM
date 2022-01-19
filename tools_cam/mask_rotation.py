@@ -135,7 +135,8 @@ def main():
 
     print('gt_mask.shape', gt_mask.shape, 'worst_case_mask.shape', worst_case_mask.shape)
 
-    rotation_angle = np.arctan(width_1, height_1)
+    rotation_angle = np.arctan2(x_1=width_1, x_2=height_1)/np.pi*180
+    print('rotation_angle', rotation_angle)
     rotate_mask = rotateImage(gt_mask, rotation_angle)
     rotate_mask_2 = rotateImage(gt_mask, -rotation_angle)
 
