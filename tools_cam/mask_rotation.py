@@ -86,7 +86,7 @@ def mask_padding(mask, height, width):
 
 def rotateImage(image, angle):
     row, col = image.shape
-    center = tuple((np.array([row, col]) - 1) / 2)
+    center = tuple((np.array([row, col]) + 1) / 2)
     rot_mat = cv2.getRotationMatrix2D(center, angle, 1.0)
     new_image = cv2.warpAffine(image, rot_mat, (col, row))
     return new_image
