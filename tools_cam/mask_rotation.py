@@ -49,17 +49,6 @@ def get_mask(im, model, transform, device):
     mask_min_v, mask_max_v = mask_pred.min(), mask_pred.max()
     mask_pred = (mask_pred - mask_min_v) / (mask_max_v - mask_min_v)
     # mask_image = (mask_pred[..., np.newaxis] * im).astype("uint8")
-    plt.axis('off')
-    # plt.imsave('/output/object_' + str(count) + '_mask_pred.JPEG', mask_pred)
-    plt.cla()
-    plt.clf()
-    plt.close()
-
-    fig, (ax1, ax2, ax3, ax4) = plt.subplots(ncols=4, figsize=(16, 16))
-
-    ax1.set_title('Input Image')
-    ax2.set_title('Token-Semantic Coupled Attention Map')
-    ax3.set_title('Binary Map')
 
     _, mask_pred_binary_map = cv2.threshold(mask_pred,
                                             mask_pred.max() * 0.15, 1,
@@ -117,6 +106,17 @@ def main():
     gt_mask_im = Image.open(gt_mask_file)
     worst_case_image = Image.open(worst_case_file)
     gt_mask = get_mask(gt_mask_im, model, transform, device)
+    # crop gt mask
+    _, contours, _ = cv2.findContours((gt_mask * 255).astype(np.uint8), cv2.RETR_TREE,
+                                      cv2.CHAIN_APPROX_SIMPLE)
+    w, h = gt_mask.size
+    if len(contours) != 0:
+        # normal box
+        c = max(contours, key=cv2.contourArea)
+        x, y, w, h = cv2.boundingRect(c)
+        bbox = [x, y, x + w, y + h]
+    gt_mask = gt_mask[bbox[1]:bbox[3], bbox[0]:bbox[2]]
+
     worst_case_mask = get_mask(worst_case_image, model, transform, device)
 
     # create new image of desired size for padding
