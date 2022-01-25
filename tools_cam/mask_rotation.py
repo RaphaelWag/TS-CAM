@@ -109,7 +109,6 @@ def main():
     # crop gt mask
     _, contours, _ = cv2.findContours((gt_mask * 255).astype(np.uint8), cv2.RETR_TREE,
                                       cv2.CHAIN_APPROX_SIMPLE)
-    w, h = gt_mask.size
     if len(contours) != 0:
         # normal box
         c = max(contours, key=cv2.contourArea)
