@@ -122,15 +122,10 @@ def main():
     height_1, width_1 = worst_case_mask.shape
     height_2, width_2 = gt_mask.shape
 
-    new_height = max(height_1, height_2)
-    new_width = max(width_1, width_2)
+    new_size = max(height_1, height_2, width_1, width_2)
 
-    print('height_1', height_1, 'width_1', width_1)
-    print('height_2', height_2, 'width_2', width_2)
-    print('new_heigth', new_height, 'new_width', new_width)
-
-    gt_mask = mask_padding(gt_mask, new_height, new_width)
-    worst_case_mask = mask_padding(worst_case_mask, new_height, new_width)
+    gt_mask = mask_padding(gt_mask, new_size, new_size)
+    worst_case_mask = mask_padding(worst_case_mask, new_size, new_size)
 
     print('Padded', 'gt_mask.shape', gt_mask.shape, 'worst_case_mask.shape', worst_case_mask.shape)
 
