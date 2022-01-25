@@ -152,19 +152,18 @@ def main():
     _, contours, _ = cv2.findContours((best_mask * 255).astype(np.uint8), cv2.RETR_TREE,
                                       cv2.CHAIN_APPROX_SIMPLE)
     if len(contours) != 0:
-        # normal box
+        # contour
         c = max(contours, key=cv2.contourArea)
-        x, y, w, h = cv2.boundingRect(c)
-        estimated_bbox = [x, y, x + w, y + h]
-        color1 = (0, 0, 255)
-
         # rotated box
         rect = cv2.minAreaRect(c)
         box = np.int0(cv2.boxPoints(rect))
         rot_box_im = cv2.drawContours(np.array(worst_case_mask), [box], 0, (36, 255, 12), 3)
 
-    fig, (ax1) = plt.subplots(ncols=1, figsize=(16, 16))
+    fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(16, 16))
+    ax1.set_title('rotated box')
+    ax2.set_title('ground truth mask')
     _ = ax1.imshow(rot_box_im)  # Visualize rotated box
+    _ = ax2.imshow(np.array(gt_mask))
     plt.savefig('/output/object_rotated_box_pred.JPEG')
     # TODO resize height of gt to diag of inference image
 
