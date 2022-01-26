@@ -100,6 +100,7 @@ def rotateImage(image, angle):
 
 
 def main():
+    count = 0
     config_file = '../configs/ILSVRC/deit_tscam_small_patch16_224.yaml'
     cfg_from_file(config_file)
     cfg.BASIC.ROOT_DIR = '../'
@@ -175,7 +176,8 @@ def main():
             ax2.set_title('ground truth mask')
             _ = ax1.imshow(rot_box_im)  # Visualize rotated box
             _ = ax2.imshow(np.array(gt_mask))
-            plt.savefig('/output/object_rotated_box_pred.JPEG')
+            plt.savefig('/output/object_rotated_box_' + str(count) + '.JPEG')
+            count += 1
     # TODO resize height of gt to diag of inference image
 
 
