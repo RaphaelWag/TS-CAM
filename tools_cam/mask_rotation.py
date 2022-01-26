@@ -73,6 +73,24 @@ def mask_padding(mask, height, width):
     return padding
 
 
+def image_padding(image, height, width):
+    orig_height, orig_width, channels = image.shape
+
+    # compute center offset
+    x_start = (width - orig_width) // 2
+    y_start = (height - orig_height) // 2
+
+    # padding for gt mask
+    color = (0, 0, 0)
+    padding = np.full((height, width, channels), color, dtype=np.uint8)
+
+    # copy mask into center of emtpy image
+    padding[y_start:y_start + orig_height,
+    x_start:x_start + orig_width] = image
+
+    return padding
+
+
 def rotateImage(image, angle):
     row, col = image.shape
     center = tuple((np.array([row, col]) + 1) / 2)
@@ -100,65 +118,64 @@ def main():
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
 
-    gt_mask_file = '/tscam_images/isolated.JPEG'
-    worst_case_file = '/tscam_images/worstcase.JPEG'
+    gt_mask_files = glob('/tscam_images/gt_masks/*.JPEG')
+    for gt_mask_file in gt_mask_files:
+        screw_type = gt_mask_file.split('.')[0].split('_')[-1]
+        usecase_files = glob('/tscam_images/' + screw_type + '/*.JPEG')
+        for usecase_file in usecase_files:
+            gt_mask_im = Image.open(gt_mask_file)
+            usecase_image = Image.open(usecase_file)
+            gt_mask = get_mask(gt_mask_im, model, transform, device)
+            # crop gt mask
+            _, contours, _ = cv2.findContours((gt_mask * 255).astype(np.uint8), cv2.RETR_TREE,
+                                              cv2.CHAIN_APPROX_SIMPLE)
+            if len(contours) != 0:
+                # normal box
+                c = max(contours, key=cv2.contourArea)
+                x, y, w, h = cv2.boundingRect(c)
+                bbox = [x, y, x + w, y + h]
+            gt_mask = gt_mask[bbox[1]:bbox[3], bbox[0]:bbox[2]]
 
-    gt_mask_im = Image.open(gt_mask_file)
-    worst_case_image = Image.open(worst_case_file)
-    gt_mask = get_mask(gt_mask_im, model, transform, device)
-    # crop gt mask
-    _, contours, _ = cv2.findContours((gt_mask * 255).astype(np.uint8), cv2.RETR_TREE,
-                                      cv2.CHAIN_APPROX_SIMPLE)
-    if len(contours) != 0:
-        # normal box
-        c = max(contours, key=cv2.contourArea)
-        x, y, w, h = cv2.boundingRect(c)
-        bbox = [x, y, x + w, y + h]
-    gt_mask = gt_mask[bbox[1]:bbox[3], bbox[0]:bbox[2]]
+            usecase_mask = get_mask(usecase_image, model, transform, device)
 
-    worst_case_mask = get_mask(worst_case_image, model, transform, device)
+            # create new image of desired size for padding
+            height_1, width_1 = usecase_mask.shape
+            height_2, width_2 = gt_mask.shape
 
-    # create new image of desired size for padding
-    height_1, width_1 = worst_case_mask.shape
-    height_2, width_2 = gt_mask.shape
+            new_size = max(height_1, height_2, width_1, width_2)
 
-    new_size = max(height_1, height_2, width_1, width_2)
+            gt_mask = mask_padding(gt_mask, new_size, new_size)
+            usecase_mask = mask_padding(usecase_mask, new_size, new_size)
+            pad_img = image_padding(np.array(usecase_image), new_size, new_size)
 
-    gt_mask = mask_padding(gt_mask, new_size, new_size)
-    worst_case_mask = mask_padding(worst_case_mask, new_size, new_size)
+            rotation_angle = np.arctan(width_1 / height_1) / np.pi * 180
 
-    print('Padded', 'gt_mask.shape', gt_mask.shape, 'worst_case_mask.shape', worst_case_mask.shape)
+            rotate_mask = rotateImage(gt_mask, rotation_angle)
+            rotate_mask_2 = rotateImage(gt_mask, -rotation_angle)
 
-    rotation_angle = np.arctan(width_1 / height_1) / np.pi * 180
-    print('rotation_angle', rotation_angle)
-    rotate_mask = rotateImage(gt_mask, rotation_angle)
-    rotate_mask_2 = rotateImage(gt_mask, -rotation_angle)
+            overlap = rotate_mask * usecase_mask
+            overlap_2 = rotate_mask_2 * usecase_mask
 
-    print('rotate_mask.shape', rotate_mask.shape)
+            overlap_count = np.sum(overlap.flatten())
+            overlap_count_2 = np.sum(overlap_2.flatten())
 
-    overlap = rotate_mask * worst_case_mask
-    overlap_2 = rotate_mask_2 * worst_case_mask
+            best_mask = rotate_mask if overlap_count > overlap_count_2 else rotate_mask_2
+            _, contours, _ = cv2.findContours((best_mask * 255).astype(np.uint8), cv2.RETR_TREE,
+                                              cv2.CHAIN_APPROX_SIMPLE)
+            if len(contours) != 0:
+                # contour
+                c = max(contours, key=cv2.contourArea)
+                # rotated box
+                rect = cv2.minAreaRect(c)
+                box = np.int0(cv2.boxPoints(rect))
+                rot_box_im = cv2.drawContours(pad_img, [box], 0, (36, 255, 12), 3)
 
-    overlap_count = np.sum(overlap.flatten())
-    overlap_count_2 = np.sum(overlap_2.flatten())
-
-    best_mask = rotate_mask if overlap_count > overlap_count_2 else rotate_mask_2
-    _, contours, _ = cv2.findContours((best_mask * 255).astype(np.uint8), cv2.RETR_TREE,
-                                      cv2.CHAIN_APPROX_SIMPLE)
-    if len(contours) != 0:
-        # contour
-        c = max(contours, key=cv2.contourArea)
-        # rotated box
-        rect = cv2.minAreaRect(c)
-        box = np.int0(cv2.boxPoints(rect))
-        rot_box_im = cv2.drawContours(np.array(worst_case_mask), [box], 0, (36, 255, 12), 3)
-
-    fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(16, 16))
-    ax1.set_title('rotated box')
-    ax2.set_title('ground truth mask')
-    _ = ax1.imshow(rot_box_im)  # Visualize rotated box
-    _ = ax2.imshow(np.array(gt_mask))
-    plt.savefig('/output/object_rotated_box_pred.JPEG')
+            fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(16, 16))
+            ax1.set_title('rotated box')
+            ax2.set_title('ground truth mask')
+            _ = ax1.imshow(rot_box_im)  # Visualize rotated box
+            _ = ax2.imshow(np.array(gt_mask))
+            plt.savefig('/output/object_rotated_box_pred.JPEG')
     # TODO resize height of gt to diag of inference image
 
 
