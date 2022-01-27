@@ -173,7 +173,6 @@ def main():
 
             fig, (ax1) = plt.subplots(ncols=1, figsize=(16, 16))
             ax1.set_title('rotated box')
-            ax2.set_title('ground truth mask')
             _ = ax1.imshow(rot_box_im)  # Visualize rotated box
             plt.savefig('/output/object_rotated_box_' + str(count) + '.JPEG')
             count += 1
