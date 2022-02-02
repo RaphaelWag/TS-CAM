@@ -155,10 +155,11 @@ def main():
             gt_mask = mask_padding(gt_mask, new_size, new_size)
             usecase_mask = mask_padding(usecase_mask, new_size, new_size)
             pad_img = image_padding(np.array(usecase_image), new_size, new_size)
-
+            qudrant_sign = 1 if height_1 > width_1 else -1
             rotation_angle = np.arctan(width_1 / height_1) / np.pi * 180
-            rotation_angles = [rotation_angle, -rotation_angle, rotation_angle - 10, -rotation_angle + 10,
-                               rotation_angle - 5, -rotation_angle + 5, 90 if height_1 > width_1 else 0]
+            rotation_angles = [rotation_angle, -rotation_angle, rotation_angle - qudrant_sign * 10,
+                               -rotation_angle + qudrant_sign * 10, rotation_angle - qudrant_sign * 5,
+                               -rotation_angle + qudrant_sign * 5, 90 if height_1 < width_1 else 0]
 
             overlap_masks = [get_overlap_mask(gt_mask, usecase_mask, angle) for angle in rotation_angles]
             max_overlap = np.argmax([e[0] for e in overlap_masks])
