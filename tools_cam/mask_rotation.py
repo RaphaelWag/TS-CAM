@@ -179,6 +179,9 @@ def main():
             _ = ax1.imshow(rot_box_im)  # Visualize rotated box
             plt.savefig('/output/object_rotated_box_' + str(count) + '.JPEG')
             count += 1
+            plt.cla()
+            plt.clf()
+            plt.close()
 
     # TODO resize height of gt to diag of inference image
 
