@@ -99,6 +99,13 @@ def rotateImage(image, angle):
     return new_image
 
 
+def get_overlap_mask(gt_mask, usecase_mask, rotation_angle):
+    rotate_mask = rotateImage(gt_mask, rotation_angle)
+    overlap = rotate_mask * usecase_mask
+    overlap_count = np.sum(overlap.flatten())
+    return [overlap_count, rotate_mask]
+
+
 def main():
     count = 0
     config_file = '../configs/ILSVRC/deit_tscam_small_patch16_224.yaml'
@@ -150,17 +157,12 @@ def main():
             pad_img = image_padding(np.array(usecase_image), new_size, new_size)
 
             rotation_angle = np.arctan(width_1 / height_1) / np.pi * 180
+            rotation_angles = [rotation_angle, -rotation_angle, rotation_angle - 10, -rotation_angle + 10,
+                               rotation_angle - 5, -rotation_angle + 5, 90 if height_1 > width_1 else 0]
 
-            rotate_mask = rotateImage(gt_mask, rotation_angle)
-            rotate_mask_2 = rotateImage(gt_mask, -rotation_angle)
-
-            overlap = rotate_mask * usecase_mask
-            overlap_2 = rotate_mask_2 * usecase_mask
-
-            overlap_count = np.sum(overlap.flatten())
-            overlap_count_2 = np.sum(overlap_2.flatten())
-
-            best_mask = rotate_mask if overlap_count > overlap_count_2 else rotate_mask_2
+            overlap_masks = [get_overlap_mask(gt_mask, usecase_mask, angle) for angle in rotation_angles]
+            max_overlap = np.argmax([e[0] for e in overlap_masks])
+            best_mask = overlap_masks[max_overlap][1]
             _, contours, _ = cv2.findContours((best_mask * 255).astype(np.uint8), cv2.RETR_TREE,
                                               cv2.CHAIN_APPROX_SIMPLE)
             if len(contours) != 0:
@@ -176,6 +178,7 @@ def main():
             _ = ax1.imshow(rot_box_im)  # Visualize rotated box
             plt.savefig('/output/object_rotated_box_' + str(count) + '.JPEG')
             count += 1
+
     # TODO resize height of gt to diag of inference image
 
 
