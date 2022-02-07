@@ -1,3 +1,4 @@
+import _init_paths
 from config.default import cfg_from_list, cfg_from_file, update_config
 from config.default import config as cfg
 from torchvision import transforms
