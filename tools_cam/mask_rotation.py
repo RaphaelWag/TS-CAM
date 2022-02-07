@@ -1,5 +1,19 @@
+import os
+import sys
+import datetime
+import pprint
+
+import _init_paths
 from config.default import cfg_from_list, cfg_from_file, update_config
 from config.default import config as cfg
+from core.engine import creat_data_loader, str_gpus, \
+    AverageMeter, accuracy, list2acc, adjust_learning_rate_normal
+from core.functions import prepare_env
+from utils import mkdir, Logger
+from cams import evaluate_cls_loc
+
+import torch
+from torch.utils.tensorboard import SummaryWriter
 from torchvision import transforms
 import torch.nn.functional as F
 
@@ -8,8 +22,17 @@ from glob import glob
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
-import torch
+
+from models.vgg import vgg16_cam
 from timm.models import create_model as create_deit_model
+from timm.optim import create_optimizer
+from urllib.request import urlretrieve
+
+import torch
+from torch.utils.tensorboard import SummaryWriter
+
+from timm.models import create_model as create_deit_model
+from timm.optim import create_optimizer
 
 
 def get_mask(im, model, transform, device):
@@ -151,10 +174,9 @@ def main():
                 box = np.int0(cv2.boxPoints(rect))
                 rot_box_im = cv2.drawContours(pad_img, [box], 0, (36, 255, 12), 3)
 
-            fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(16, 16))
+            fig, (ax1) = plt.subplots(ncols=1, figsize=(16, 16))
             ax1.set_title('rotated box')
             _ = ax1.imshow(rot_box_im)  # Visualize rotated box
-            _ = ax2.imshow(usecase_mask)  # Visualize TS-CAM which is localization map for estimating object box
             plt.savefig('/output/object_rotated_box_' + str(count) + '.JPEG')
             count += 1
             plt.cla()
