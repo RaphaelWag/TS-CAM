@@ -174,9 +174,10 @@ def main():
                 box = np.int0(cv2.boxPoints(rect))
                 rot_box_im = cv2.drawContours(pad_img, [box], 0, (36, 255, 12), 3)
 
-            fig, (ax1) = plt.subplots(ncols=1, figsize=(16, 16))
+            fig, (ax1) = plt.subplots(ncols=2, figsize=(16, 16))
             ax1.set_title('rotated box')
             _ = ax1.imshow(rot_box_im)  # Visualize rotated box
+            _ = ax2.imshow(usecase_mask)  # Visualize mask
             plt.savefig('/output/object_rotated_box_' + str(count) + '.JPEG')
             count += 1
             plt.cla()
