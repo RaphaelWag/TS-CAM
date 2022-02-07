@@ -154,7 +154,7 @@ def main():
             fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(16, 16))
             ax1.set_title('rotated box')
             _ = ax1.imshow(rot_box_im)  # Visualize rotated box
-            _ = ax2.imshow(mask_pred)  # Visualize TS-CAM which is localization map for estimating object box
+            _ = ax2.imshow(usecase_mask)  # Visualize TS-CAM which is localization map for estimating object box
             plt.savefig('/output/object_rotated_box_' + str(count) + '.JPEG')
             count += 1
             plt.cla()
