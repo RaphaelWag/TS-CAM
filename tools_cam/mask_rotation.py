@@ -3,6 +3,7 @@ from config.default import cfg_from_list, cfg_from_file, update_config
 from config.default import config as cfg
 from torchvision import transforms
 import torch.nn.functional as F
+from core.functions import prepare_env
 
 from PIL import Image
 from glob import glob
