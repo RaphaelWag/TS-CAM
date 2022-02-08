@@ -178,7 +178,7 @@ def main():
                 box = np.int0(cv2.boxPoints(rect))
                 rot_box_im = cv2.drawContours(pad_img, [box], 0, (36, 255, 12), 3)
 
-            fig, (ax1, ax2, ax3) = plt.subplots(ncols=3, figsize=(16, 16))
+            fig, (ax1, ax2, ax3) = plt.subplots(ncols=3)
             ax1.set_title('rotated box')
             ax2.set_title('heatmap mask')
             ax3.set_title('binary mask')
