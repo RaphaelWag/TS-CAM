@@ -157,6 +157,7 @@ def main():
 
             gt_mask = mask_padding(gt_mask, new_size, new_size)
             usecase_mask = mask_padding(usecase_mask, new_size, new_size)
+            heatmap = mask_padding(heatmap, new_size, new_size)
             pad_img = image_padding(np.array(usecase_image), new_size, new_size)
             qudrant_sign = 1 if height_1 > width_1 else -1
             rotation_angle = np.arctan(width_1 / height_1) / np.pi * 180
