@@ -178,13 +178,14 @@ def main():
                 box = np.int0(cv2.boxPoints(rect))
                 rot_box_im = cv2.drawContours(pad_img, [box], 0, (36, 255, 12), 3)
 
-            fig, (ax1, ax2, ax3) = plt.subplots(ncols=3)
+            fig, (ax1, ax2, ax3, ax4) = plt.subplots(ncols=4)
             ax1.set_title('rotated box')
             ax2.set_title('heatmap mask')
             ax3.set_title('binary mask')
             _ = ax1.imshow(rot_box_im)  # Visualize rotated box
             _ = ax2.imshow(heatmap)  # Visualize mask
             _ = ax3.imshow(usecase_mask)  # Visualize mask
+            _ = ax4.imshow(gt_mask)  # Visualize reference mask
             plt.savefig('/output/object_rotated_box_' + str(count) + '.JPEG')
             count += 1
             plt.cla()
