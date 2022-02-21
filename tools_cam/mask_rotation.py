@@ -129,10 +129,10 @@ def main():
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
 
-    gt_mask_files = glob('/tscam_images/gt_masks/*.JPEG')
+    gt_mask_files = glob('/tscam_images/gt_masks/*.*')
     for gt_mask_file in gt_mask_files:
         screw_type = gt_mask_file.split('.')[0].split('_')[-1]
-        usecase_files = glob('/tscam_images/' + screw_type + '/*.JPEG')
+        usecase_files = glob('/tscam_images/' + screw_type + '/*.*')
         for usecase_file in usecase_files:
             gt_mask_im = Image.open(gt_mask_file)
             usecase_image = Image.open(usecase_file)
