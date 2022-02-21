@@ -54,8 +54,8 @@ def get_mask(im, model, transform, device):
                                             mask_pred.max() * 0.15, 1,
                                             cv2.THRESH_BINARY)
     _, mask_pred_heatmap = cv2.threshold(mask_pred,
-                                            mask_pred.max() * 0.15, 1,
-                                            cv2.THRESH_TOZERO)
+                                         mask_pred.max() * 0.15, 1,
+                                         cv2.THRESH_TOZERO)
     return mask_pred_binary_map, mask_pred_heatmap
 
 
@@ -161,9 +161,10 @@ def main():
             pad_img = image_padding(np.array(usecase_image), new_size, new_size)
             qudrant_sign = 1 if height_1 > width_1 else -1
             rotation_angle = np.arctan(width_1 / height_1) / np.pi * 180
-            rotation_angles = [rotation_angle, -rotation_angle, rotation_angle - qudrant_sign * 10,
-                               -rotation_angle + qudrant_sign * 10, rotation_angle - qudrant_sign * 5,
-                               -rotation_angle + qudrant_sign * 5, 90 if height_1 < width_1 else 0]
+            rotation_angles = np.array([rotation_angle, -rotation_angle, rotation_angle - qudrant_sign * 10,
+                                        -rotation_angle + qudrant_sign * 10, rotation_angle - qudrant_sign * 5,
+                                        -rotation_angle + qudrant_sign * 5, 90 if height_1 < width_1 else 0])
+            rotation_angles = np.append(rotation_angle, rotation_angles + 180)
 
             overlap_masks = [get_overlap_mask(gt_mask, usecase_mask, angle) for angle in rotation_angles]
             max_overlap = np.argmax([e[0] for e in overlap_masks])
