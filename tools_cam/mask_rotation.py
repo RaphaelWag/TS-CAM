@@ -183,7 +183,7 @@ def main():
             ax1.set_title('rotated box')
             ax2.set_title('heatmap mask')
             ax3.set_title('binary mask')
-            ax3.set_title('reference mask')
+            ax4.set_title('reference mask')
             _ = ax1.imshow(rot_box_im)  # Visualize rotated box
             _ = ax2.imshow(heatmap)  # Visualize mask
             _ = ax3.imshow(usecase_mask)  # Visualize mask
