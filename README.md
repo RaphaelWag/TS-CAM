@@ -1,16 +1,32 @@
 # TS-CAM: Token Semantic Coupled Attention Map for Weakly SupervisedObject Localization
-This is the official implementaion of paper [***TS-CAM: Token Semantic Coupled Attention Map for Weakly Supervised Object Localization***](https://arxiv.org/abs/2103.14862), which is accepted as ***ICCV 2021*** poster.
 
-This repository contains Pytorch training code, evaluation code, pretrained models and jupyter notebook for more visualization.
+This is the official implementaion of paper [***TS-CAM: Token Semantic Coupled Attention Map for Weakly Supervised
+Object Localization***](https://arxiv.org/abs/2103.14862), which is accepted as ***ICCV 2021*** poster.
+
+This repository contains Pytorch training code, evaluation code, pretrained models and jupyter notebook for more
+visualization.
 
 ## Illustration
 
-Based on Deit, TS-CAM couples attention maps from visual image transformer with semantic-aware maps to obtain accurate localization maps (Token Semantic Coupled Attention Map, ts-cam).
+Based on Deit, TS-CAM couples attention maps from visual image transformer with semantic-aware maps to obtain accurate
+localization maps (Token Semantic Coupled Attention Map, ts-cam).
 
 ![ts-cam](./figures/ts-cam.png)
 
+# Custom image Inference
+
+- Download the
+  pre-trained [weights](https://drive.google.com/drive/folders/1vLJhWaRxCOTx_SyvrkP0XDXt9QNCXOdv?usp=sharing)
+- use the python script tools_cam/mask_rotation.py
+
+```
+bash mask_rotation.py --weights 'path/to/weights.pth' --inference-image 'path/to/image.png' --reference 'path/to/reference.png'
+```
+
 # Updates
-- (06/07/2021) Higher performance is reported when using stonger visual transformer [Conformer](https://arxiv.org/abs/2105.03889).
+
+- (06/07/2021) Higher performance is reported when using stonger visual
+  transformer [Conformer](https://arxiv.org/abs/2105.03889).
 
 # Model Zoo
 
@@ -25,7 +41,6 @@ We provide pretrained TS-CAM models trained on CUB-200-2011 and ImageNet_ILSVRC2
 |  Deit-B-384   |   75.8   |  84.1   |  86.6  |   86.8  |   96.7  |   [model](https://pan.baidu.com/s/1ui8dk-_U7wUw2JD0K9wOLw)  | [model](https://drive.google.com/drive/folders/1vLJhWaRxCOTx_SyvrkP0XDXt9QNCXOdv?usp=sharing) |
 |  Conformer-S   |   77.2   |  90.9   |  94.1  |   81.0  |   95.8  |   [model](https://pan.baidu.com/s/1ui8dk-_U7wUw2JD0K9wOLw)  | [model](https://drive.google.com/drive/folders/1vLJhWaRxCOTx_SyvrkP0XDXt9QNCXOdv?usp=sharing) |
 
-
 ## ILSVRC2012 dataset
 
 | Backbone | Loc.Acc@1 | Loc.Acc@5 | Loc.Gt-Known | Cls.Acc@1 | Cls.Acc@5 | Baidu Drive | Google Drive |
@@ -34,17 +49,21 @@ We provide pretrained TS-CAM models trained on CUB-200-2011 and ImageNet_ILSVRC2
 
 Note: the Extrate Code for Baidu Drive is [gwg7](https://pan.baidu.com/s/1ui8dk-_U7wUw2JD0K9wOLw)
 
-- On CUB-200-2011 dataset, we train **TS-CAM** on one Titan RTX 2080Ti GPU, with batch-size 128 and learning rate 5e-5, respectively. 
-- On ILSVRC2012 dataset, we train **TS-CAM** on four Titan RTX 2080Ti GPUs, with batch-size 256 and learning rate 5e-4, respectively.
+- On CUB-200-2011 dataset, we train **TS-CAM** on one Titan RTX 2080Ti GPU, with batch-size 128 and learning rate 5e-5,
+  respectively.
+- On ILSVRC2012 dataset, we train **TS-CAM** on four Titan RTX 2080Ti GPUs, with batch-size 256 and learning rate 5e-4,
+  respectively.
 
 # Usage
 
 First clone the repository locally:
+
 ```
 git clone https://github.com/vasgaowei/TS-CAM.git
 ```
-Then install Pytorch 1.7.0+ and torchvision 0.8.1+ and [pytorch-image-models 0.3.2](https://github.com/rwightman/pytorch-image-models):
 
+Then install Pytorch 1.7.0+ and torchvision 0.8.1+
+and [pytorch-image-models 0.3.2](https://github.com/rwightman/pytorch-image-models):
 
 ```
 
@@ -59,7 +78,7 @@ pip install timm==0.3.2
 
 ### CUB-200-2011 dataset
 
-Please download and extrate [CUB-200-2011](http://www.vision.caltech.edu/visipedia/CUB-200-2011.html) dataset. 
+Please download and extrate [CUB-200-2011](http://www.vision.caltech.edu/visipedia/CUB-200-2011.html) dataset.
 
 The directory structure is the following:
 
@@ -81,9 +100,9 @@ TS-CAM/
 
 ### ImageNet1k
 
-Download [ILSVRC2012](http://image-net.org/) dataset and  extract train and val images.
+Download [ILSVRC2012](http://image-net.org/) dataset and extract train and val images.
 
-The directory structure is organized as follows: 
+The directory structure is organized as follows:
 
 ```
 TS-CAM/
@@ -115,24 +134,34 @@ And the training and validation data is expected to be in the `train/` folder an
 ## For training:
 
 On CUB-200-2011 dataset:
+
 ```
 bash train_val_cub.sh {GPU_ID} ${NET} ${NET_SCALE} ${SIZE}
 ```
+
 On ImageNet1k dataset:
+
 ```
 bash train_val_ilsvrc.sh {GPU_ID} ${NET}  ${NET_SCALE} ${SIZE}
 ```
-Please note that pretrained model weights of Deit-tiny, Deit-small and Deit-base on ImageNet-1k model will be downloaded when you first train you model, so the Internet should be connected.
+
+Please note that pretrained model weights of Deit-tiny, Deit-small and Deit-base on ImageNet-1k model will be downloaded
+when you first train you model, so the Internet should be connected.
 
 ## For evaluation:
+
 On CUB-200-2011 dataset:
+
 ```
 bash val_cub.sh {GPU_ID} ${NET} ${NET_SCALE} ${SIZE} ${MODEL_PATH}
 ```
+
 On ImageNet1k dataset:
+
 ```
 bash val_ilsvrc.sh {GPU_ID} ${NET} ${NET_SCALE} ${SIZE} ${MODEL_PATH}
 ```
+
 `GPU_ID` should be specified and multiple GPUs can be used for accelerating training and evaluation.
 
 `NET` shoule be chosen among `deit` and `conformer`.
@@ -144,17 +173,22 @@ bash val_ilsvrc.sh {GPU_ID} ${NET} ${NET_SCALE} ${SIZE} ${MODEL_PATH}
 `MODEL_PATH` is the path of pretrained model.
 
 # Visualization
+
 We provided `jupyter notebook` in `tools_cam` folder.
+
 ```
 TS-CAM/
   tools-cam/
     visualization_attention_map_cub.ipynb
     visualization_attention_map_imaget.ipynb
 ```
-Please download pretrained TS-CAM model weights and try more visualzation results((Attention maps using our method and [Attention Rollout](https://arxiv.org/abs/2005.00928) method)).
-You can try other interseting images you like to show the localization map(ts-cams).
+
+Please download pretrained TS-CAM model weights and try more visualzation results((Attention maps using our method
+and [Attention Rollout](https://arxiv.org/abs/2005.00928) method)). You can try other interseting images you like to
+show the localization map(ts-cams).
 
 ## Visualize localization results
+
 We provide some visualization results as follows.
 
 ![localization](./figures/localization_results.png)
@@ -167,7 +201,9 @@ We can also visualize attention maps from different transformer layers.
 ![attention_map_ilsvrc](./figures/attention_many_layer_ilsvrc.png)
 
 # Contacts
+
 If you have any question about our work or this repository, please don't hesitate to contact us by emails.
+
 - [vasgaowei@gmail.com](vasgaowei@gmail.com)
 - [qxye@ucas.ac.cn](qxye@ucas.ac.cn)
 - [wanfang@ucas.ac.cn](wanfang@ucas.ac.cn)
@@ -175,6 +211,7 @@ If you have any question about our work or this repository, please don't hesitat
 You can also open an issue under this project.
 
 # Citation
+
 If you use this code for a paper please cite:
 
 ```
