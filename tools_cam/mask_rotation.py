@@ -2,7 +2,6 @@ import os
 import sys
 import datetime
 import pprint
-import argparse
 
 import _init_paths
 from config.default import cfg_from_list, cfg_from_file, update_config
@@ -110,16 +109,7 @@ def get_overlap_mask(gt_mask, usecase_mask, rotation_angle):
     return [overlap_count, rotate_mask]
 
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', type=str, required=True, help='path to pre-trained weights')
-    opt = parser.parse_args()
-    return opt
-
-
 def main():
-    opt = parse_args()
-
     count = 0
     config_file = '../configs/ILSVRC/deit_tscam_small_patch16_224.yaml'
     cfg_from_file(config_file)
@@ -129,8 +119,7 @@ def main():
                               drop_path_rate=0.1, drop_block_rate=None)
     device = 'cuda'
     model = model.to(device)
-    # checkpoint = torch.load('/ts-cam-deit-small/ts-cam-deit-small/ILSVRC2012/model_epoch12.pth')
-    checkpoint = torch.load(opt.weights)
+    checkpoint = torch.load('/ts-cam-deit-small/ts-cam-deit-small/ILSVRC2012/model_epoch12.pth')
     pretrained_dict = {k[7:]: v for k, v in checkpoint['state_dict'].items()}
     model.load_state_dict(pretrained_dict)
     model.eval()
