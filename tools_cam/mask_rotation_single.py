@@ -113,23 +113,23 @@ def get_overlap_mask(gt_mask, usecase_mask, rotation_angle):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', type=str, required=True, help='path to pre-trained weights')
+    parser.add_argument('--inference-image', type=str, required=True, help='path to inference image')
+    parser.add_argument('--reference', type=str, required=True, help='path to reference image')
     opt = parser.parse_args()
     return opt
 
 
 def main():
     opt = parse_args()
-
-    count = 0
     config_file = '../configs/ILSVRC/deit_tscam_small_patch16_224.yaml'
     cfg_from_file(config_file)
     cfg.BASIC.ROOT_DIR = '../'
 
     model = create_deit_model(cfg.MODEL.ARCH, pretrained=False, num_classes=cfg.DATA.NUM_CLASSES, drop_rate=0.0,
                               drop_path_rate=0.1, drop_block_rate=None)
-    device = 'cuda'
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model = model.to(device)
-    # checkpoint = torch.load('/ts-cam-deit-small/ts-cam-deit-small/ILSVRC2012/model_epoch12.pth')
+
     checkpoint = torch.load(opt.weights)
     pretrained_dict = {k[7:]: v for k, v in checkpoint['state_dict'].items()}
     model.load_state_dict(pretrained_dict)
@@ -140,70 +140,68 @@ def main():
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
 
-    gt_mask_files = glob('/tscam_images/gt_masks/*.*')
-    for gt_mask_file in gt_mask_files:
-        screw_type = gt_mask_file.split('.')[0].split('_')[-1]
-        usecase_files = glob('/tscam_images/' + screw_type + '/*.*')
-        for usecase_file in usecase_files:
-            gt_mask_im = Image.open(gt_mask_file)
-            usecase_image = Image.open(usecase_file)
-            gt_mask, _ = get_mask(gt_mask_im, model, transform, device)
-            # crop gt mask
-            _, contours, _ = cv2.findContours((gt_mask * 255).astype(np.uint8), cv2.RETR_TREE,
-                                              cv2.CHAIN_APPROX_SIMPLE)
-            if len(contours) != 0:
-                # normal box
-                c = max(contours, key=cv2.contourArea)
-                x, y, w, h = cv2.boundingRect(c)
-                bbox = [x, y, x + w, y + h]
-            gt_mask = gt_mask[bbox[1]:bbox[3], bbox[0]:bbox[2]]
+    gt_mask_file = opt.reference
+    usecase_file = opt.inference_image
 
-            usecase_mask, heatmap = get_mask(usecase_image, model, transform, device)
+    gt_mask_im = Image.open(gt_mask_file)
+    usecase_image = Image.open(usecase_file)
 
-            # create new image of desired size for padding
-            height_1, width_1 = usecase_mask.shape
-            height_2, width_2 = gt_mask.shape
+    gt_mask, _ = get_mask(gt_mask_im, model, transform, device)
+    # crop gt mask
+    _, contours, _ = cv2.findContours((gt_mask * 255).astype(np.uint8), cv2.RETR_TREE,
+                                      cv2.CHAIN_APPROX_SIMPLE)
+    if len(contours) != 0:
+        # normal box
+        c = max(contours, key=cv2.contourArea)
+        x, y, w, h = cv2.boundingRect(c)
+        bbox = [x, y, x + w, y + h]
+    gt_mask = gt_mask[bbox[1]:bbox[3], bbox[0]:bbox[2]]
 
-            new_size = max(height_1, height_2, width_1, width_2)
+    usecase_mask, heatmap = get_mask(usecase_image, model, transform, device)
 
-            gt_mask = mask_padding(gt_mask, new_size, new_size)
-            usecase_mask = mask_padding(usecase_mask, new_size, new_size)
-            heatmap = mask_padding(heatmap, new_size, new_size)
-            pad_img = image_padding(np.array(usecase_image), new_size, new_size)
-            qudrant_sign = 1 if height_1 > width_1 else -1
-            rotation_angle = np.arctan(width_1 / height_1) / np.pi * 180
-            rotation_angles = np.array([rotation_angle, -rotation_angle, rotation_angle - qudrant_sign * 10,
-                                        -rotation_angle + qudrant_sign * 10, rotation_angle - qudrant_sign * 5,
-                                        -rotation_angle + qudrant_sign * 5, 90 if height_1 < width_1 else 0])
-            rotation_angles = np.append(rotation_angle, rotation_angles + 180)
+    # create new image of desired size for padding
+    height_1, width_1 = usecase_mask.shape
+    height_2, width_2 = gt_mask.shape
 
-            overlap_masks = [get_overlap_mask(gt_mask, usecase_mask, angle) for angle in rotation_angles]
-            max_overlap = np.argmax([e[0] for e in overlap_masks])
-            best_mask = overlap_masks[max_overlap][1]
-            _, contours, _ = cv2.findContours((best_mask * 255).astype(np.uint8), cv2.RETR_TREE,
-                                              cv2.CHAIN_APPROX_SIMPLE)
-            if len(contours) != 0:
-                # contour
-                c = max(contours, key=cv2.contourArea)
-                # rotated box
-                rect = cv2.minAreaRect(c)
-                box = np.int0(cv2.boxPoints(rect))
-                rot_box_im = cv2.drawContours(pad_img, [box], 0, (36, 255, 12), 3)
+    new_size = max(height_1, height_2, width_1, width_2)
 
-            fig, (ax1, ax2, ax3, ax4) = plt.subplots(ncols=4)
-            ax1.set_title('rotated box')
-            ax2.set_title('heatmap mask')
-            ax3.set_title('binary mask')
-            ax4.set_title('reference mask')
-            _ = ax1.imshow(rot_box_im)  # Visualize rotated box
-            _ = ax2.imshow(heatmap)  # Visualize mask
-            _ = ax3.imshow(usecase_mask)  # Visualize mask
-            _ = ax4.imshow(gt_mask)  # Visualize reference mask
-            plt.savefig('/output/object_rotated_box_' + str(count) + '.JPEG')
-            count += 1
-            plt.cla()
-            plt.clf()
-            plt.close()
+    gt_mask = mask_padding(gt_mask, new_size, new_size)
+    usecase_mask = mask_padding(usecase_mask, new_size, new_size)
+    heatmap = mask_padding(heatmap, new_size, new_size)
+    pad_img = image_padding(np.array(usecase_image), new_size, new_size)
+    qudrant_sign = 1 if height_1 > width_1 else -1
+    rotation_angle = np.arctan(width_1 / height_1) / np.pi * 180
+    rotation_angles = np.array([rotation_angle, -rotation_angle, rotation_angle - qudrant_sign * 10,
+                                -rotation_angle + qudrant_sign * 10, rotation_angle - qudrant_sign * 5,
+                                -rotation_angle + qudrant_sign * 5, 90 if height_1 < width_1 else 0])
+    rotation_angles = np.append(rotation_angle, rotation_angles + 180)
+
+    overlap_masks = [get_overlap_mask(gt_mask, usecase_mask, angle) for angle in rotation_angles]
+    max_overlap = np.argmax([e[0] for e in overlap_masks])
+    best_mask = overlap_masks[max_overlap][1]
+    _, contours, _ = cv2.findContours((best_mask * 255).astype(np.uint8), cv2.RETR_TREE,
+                                      cv2.CHAIN_APPROX_SIMPLE)
+    if len(contours) != 0:
+        # contour
+        c = max(contours, key=cv2.contourArea)
+        # rotated box
+        rect = cv2.minAreaRect(c)
+        box = np.int0(cv2.boxPoints(rect))
+        rot_box_im = cv2.drawContours(pad_img, [box], 0, (36, 255, 12), 3)
+
+    fig, (ax1, ax2, ax3, ax4) = plt.subplots(ncols=4)
+    ax1.set_title('rotated box')
+    ax2.set_title('heatmap mask')
+    ax3.set_title('binary mask')
+    ax4.set_title('reference mask')
+    _ = ax1.imshow(rot_box_im)  # Visualize rotated box
+    _ = ax2.imshow(heatmap)  # Visualize mask
+    _ = ax3.imshow(usecase_mask)  # Visualize mask
+    _ = ax4.imshow(gt_mask)  # Visualize reference mask
+    plt.savefig('/output/object_rotated_box.JPEG')
+    plt.cla()
+    plt.clf()
+    plt.close()
 
     # TODO resize height of gt to diag of inference image
 

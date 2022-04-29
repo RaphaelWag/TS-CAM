@@ -22,6 +22,11 @@ localization maps (Token Semantic Coupled Attention Map, ts-cam).
 ```
 bash mask_rotation.py --weights 'path/to/weights.pth' --inference-image 'path/to/image.png' --reference 'path/to/reference.png'
 ```
+example:
+```
+bash mask_rotation.py --weights '/ts-cam-deit-small/ts-cam-deit-small/ILSVRC2012/model_epoch12.pth' --inference-image 'path/to/image.png' --reference 'path/to/reference.png'
+```
+
 
 # Updates
 
