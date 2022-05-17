@@ -42,7 +42,7 @@ def get_mask(im, model, transform, device):
         x_logits, tscams = model(x, True)
 
     x_probs = F.softmax(x_logits, dim=-1)
-    pred_cls_id = x_probs.argmax()  # hardcode this to screw?
+    pred_cls_id = x_probs.argmax()
 
     cam_pred = tscams[0, pred_cls_id, :, :].detach().cpu().numpy()
     mask_pred = cv2.resize(cam_pred, im.size)
