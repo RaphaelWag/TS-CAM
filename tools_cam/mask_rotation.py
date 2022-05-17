@@ -129,7 +129,7 @@ def main():
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
 
-    gt_mask_files = glob('/tscam_images/gt_masks/14.*')
+    gt_mask_files = glob('/tscam_images/gt_masks/*14.*')
     for gt_mask_file in gt_mask_files:
         screw_type = gt_mask_file.split('.')[0].split('_')[-1]
         usecase_files = glob('/tscam_images/' + screw_type + '/*.*')
@@ -137,6 +137,7 @@ def main():
             gt_mask_im = Image.open(gt_mask_file)
             usecase_image = Image.open(usecase_file)
             gt_mask, _ = get_mask(gt_mask_im, model, transform, device)
+            print(gt_mask.shape)
             # crop gt mask
             _, contours, _ = cv2.findContours((gt_mask * 255).astype(np.uint8), cv2.RETR_TREE,
                                               cv2.CHAIN_APPROX_SIMPLE)
