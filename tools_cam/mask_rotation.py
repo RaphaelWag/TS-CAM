@@ -132,7 +132,7 @@ def main():
     gt_mask_files = glob('/tscam_images/gt_masks/*.*')
     for gt_mask_file in gt_mask_files:
         screw_type = gt_mask_file.split('.')[0].split('_')[-1]
-        usecase_files = glob('/tscam_images/' + screw_type + '/*.*')
+        usecase_files = glob('/tscam_images/' + screw_type + '/14.*')
         for usecase_file in usecase_files:
             gt_mask_im = Image.open(gt_mask_file)
             usecase_image = Image.open(usecase_file)
